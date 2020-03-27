@@ -55,3 +55,8 @@ class TableBasedCritic(Critic):
 	def update(self, state):
 		self.update_value_function(state)
 		self.update_eligibilities(state)
+
+
+class NeuralNetBasedCritic():
+	def __init__():
+		pass
