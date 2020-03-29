@@ -24,7 +24,7 @@ class Game():
 
 	def perform_decoded_move(self, decoded_move):
 		self.prev_state = copy.deepcopy(self.board.cells)
-		y1, x1, y2, x2  = tuple(int(decoded_move[i:i + 8], 2) for i in range(0,len(decoded_move), 8))
+		y1, x1, y2, x2  = tuple(int(decoded_move[i:i + 8], 2) for i in range(0, len(decoded_move), 8))
 		move = Move(self.board.cells[y1 - 1][x1 - 1], self.board.cells[y2 - 1][x2 - 1])
 		self.player.move_peg(move)
 
@@ -38,7 +38,7 @@ class Game():
 		if self.is_winning_state():
 			return 10000
 		elif self.is_lost_state():
-			return -self.board.get_open_cell_count()
+			return -self.board.get_open_cell_count() ** 2
 		else:
 			return 0
 

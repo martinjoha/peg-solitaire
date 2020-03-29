@@ -3,6 +3,12 @@ from agent.agent import *
 from game.game import *
 from game.board_drawer import *
 from learning_plot import *
+
+import os
+
+os.environ['KMP_DUPLICATE_LIB_OK']='True'
+
+import time
 def decode_board(board):
 	bit_string = ''
 	for row in board:
@@ -22,23 +28,28 @@ def decode_move(move):
 
 
 def main():
-	game = Game('ff', 4, [(3,2)])
-	agent = Agent('tablebasedcritic', 0.05, 0.01, 0.9, 0.9, 0.9, 0.9, 1, 0.99)
+	game = Game('fdsf', 4, [(4,2)])
+	agent = Agent('nn', 0.05, 0.01, 0.9, 0.9, 0.9, 0.9, 0.5, 0.99, [124, 64])
 	drawer = BoardDrawer(game.board)
 
 	closed_cell_count = []
-	for i in range(500):
+	decoded_init_state = decode_board(game.board.cells) 
+	agent.set_init_state(decoded_init_state) # to set up the critic initially
+	start = time.time()
+	n = 1000
+	for i in range(n):
 
-		if i == 499: # for the last episode set epsilon to 0 to use target policy
+		if i == n - 1: # for the last episode set epsilon to 0 to use target policy
 			agent.actor.set_epsilon(0)
 		init_legal_moves, _1, init_state, _2 = game.send_information()
 		decoded_state = decode_board(init_state)
 		decoded_actions = [decode_move(move) for move in init_legal_moves]
 		agent.actor.choose_action(decoded_state, decoded_actions)
 		action = agent.get_chosen_action()
-		agent.set_init_state(decoded_state, action)
 		agent.update_episode(decoded_state, action)
 
+		if i == 500:
+			print('fdfd')
 		while not game.is_end_state():
 			chosen_action = agent.get_chosen_action()
 			game.perform_decoded_move(chosen_action)
@@ -48,9 +59,12 @@ def main():
 			decoded_current_state = decode_board(current_state)
 			agent.update(decoded_prev_state, decoded_current_state, decoded_moves, reward) # chose action, and update tables
 		print(game.is_lost_state(), i)
+		
 		closed_cell_count.append(game.board.get_closed_cell_count())
 		game.reset()
-		if i == 499:
+
+		if i == n - 1:
+			print(time.time() - start)
 			game.visualize_episode(agent.current_episode)
 		agent.reset()
 
@@ -61,4 +75,6 @@ def main():
 
 
 if __name__ == '__main__':
+	start = time.time()
 	main()
+	print(time.time() - start)

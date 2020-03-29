@@ -8,22 +8,29 @@ class Agent():
 		actor_learning_rate, critic_learning_rate,
 		actor_trace_decay_factor, critic_trace_decay_factor, 
 		actor_discount_factor, critic_discount_factor,
-		actor_epsilon_value, actor_epsilon_decay_rate,
+		actor_epsilon_value, actor_epsilon_decay_rate, nn_dims=[64]
 		):
+		self.critic_type = critic_type
 		if critic_type == 'tablebasedcritic':
 			self.critic = TableBasedCritic(critic_learning_rate, critic_trace_decay_factor, critic_discount_factor)
+		
+		elif critic_type == 'nn':
+			self.critic = NeuralNetBasedCritic(critic_learning_rate, critic_trace_decay_factor, critic_discount_factor, nn_dims)
 		self.actor = Actor(actor_epsilon_value, actor_epsilon_decay_rate, actor_discount_factor,
 							actor_learning_rate, actor_trace_decay_factor)
 		self.current_episode = []
 		self.current_state = None
 
-	def set_init_state(self, state, action):
+	def set_init_state(self, state):
 		self.critic.set_init_state(state)
 
 
 	def update(self, prev_state, state, actions, reward):
 		self.actor.choose_action(state, actions)
-		self.critic.calculate_td_error(prev_state, state, reward)
+		if self.critic_type == 'tablebasedcritic':
+			self.critic.calculate_td_error(prev_state, state, reward)
+		else: self.critic.propagate(prev_state, state, reward)
+		
 		self.actor.set_td_error(self.critic.td_error)
 		for sap in self.current_episode:
 			self.critic.update(sap[0])
